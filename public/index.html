@@ -1,49 +1,97 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <title>Waste Management Reporting System</title>
+
+  <!-- Mobile friendly -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Waste Report</title>
-  <link rel="stylesheet" href="style.css">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #1e7e34;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+
+    main {
+      max-width: 400px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 10px;
+      font-size: 14px;
+    }
+
+    textarea {
+      resize: none;
+      height: 80px;
+    }
+
+    button {
+      background: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background: #218838;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+      margin-top: 20px;
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="container">
-  <h2>Report Waste</h2>
+<header>
+  <h1>Waste Reporting System</h1>
+  <p>Report garbage with photo & location</p>
+</header>
 
-  <input type="file" id="photo" accept="image/*" capture="environment">
-  <button onclick="getLocation()">Get Location</button>
-  <p id="locationText"></p>
-  <button onclick="submitReport()">Submit Report</button>
-</div>
+<main>
+  <h2>Submit a Report</h2>
 
-<script>
-let latitude, longitude;
+  <form id="reportForm">
+    <input type="file" id="photo" accept="image/*" required>
+    <textarea id="description" placeholder="Describe the waste issue (optional)"></textarea>
+    <button type="submit">Submit Report</button>
+  </form>
+</main>
 
-function getLocation() {
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      latitude = position.coords.latitude;
-      longitude = position.coords.longitude;
-      document.getElementById("locationText").innerText = "Location captured";
-    },
-    () => alert("Please allow location access")
-  );
-}
+<footer>
+  © 2026 Waste Management System
+</footer>
 
-function submitReport() {
-  const photo = document.getElementById("photo").files[0];
-  if (!photo || !latitude) { alert("Upload photo and get location first"); return; }
-
-  const formData = new FormData();
-  formData.append("photo", photo);
-  formData.append("latitude", latitude);
-  formData.append("longitude", longitude);
-
-  fetch("http://localhost:3000/report", { method: "POST", body: formData })
-    .then(() => alert("Report sent successfully"))
-    .catch(() => alert("Error sending report"));
-}
-</script>
+<!-- IMPORTANT: script.js must be in same folder -->
+<script src="script.js"></script>
 
 </body>
 </html>
