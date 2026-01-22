@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Waste Management System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body style="
+  font-family:Arial;
+  background:#f4f6f8;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+">
+
+  <div style="
+    background:white;
+    padding:30px;
+    border-radius:10px;
+    width:320px;
+    text-align:center;
+  ">
+
+    <h2>Welcome</h2>
+    <p>Select your role</p>
+
+    <button onclick="goUser()" style="
+      width:100%;
+      padding:12px;
+      margin-bottom:10px;
+      background:#28a745;
+      color:white;
+      border:none;
+    ">
+      I am a User
+    </button>
+
+    <button onclick="goAdmin()" style="
+      width:100%;
+      padding:12px;
+      background:#007bff;
+      color:white;
+      border:none;
+    ">
+      I am an Admin
+    </button>
+
+  </div>
+
+<script>
+function goUser() {
+  window.location.href = "/index.html";
+}
+
+function goAdmin() {
+  window.location.href = "/admin-login.html";
+}
+</script>
+
+</body>
+</html>
