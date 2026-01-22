@@ -1,65 +1,53 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="style.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body>
 
-<div class="container">
-    <h2>Admin Dashboard</h2>
-    <button class="logout-btn" onclick="logout()">Logout</button>
-    <div id="reports"></div>
-</div>
+<body style="font-family:Arial; background:#f4f6f8;">
 
-<script>
-// 1️⃣ Login check
-if (!localStorage.getItem("adminLoggedIn")) {
-    window.location.href = "admin-login.html";
-}
+  <h2 style="text-align:center;">Admin Dashboard</h2>
 
-// 2️⃣ Logout
-function logout() {
-    localStorage.removeItem("adminLoggedIn");
-    window.location.href = "admin-login.html";
-}
+  <div id="reports"></div>
 
-// 3️⃣ Load reports as cards
-function loadReports() {
-    fetch("http://localhost:3000/reports")
-        .then(res => res.json())
-        .then(data => {
-            const div = document.getElementById("reports");
-            div.innerHTML = "";
-            data.forEach(r => {
-                div.innerHTML += `
-                <div class="report-card">
-                    <img src="http://localhost:3000/uploads/${r.image}" alt="Waste Image">
-                    <p><b>Status:</b> ${r.status}</p>
-                    <p><b>Date:</b> ${new Date(r.date).toLocaleString()}</p>
-                    <p><a href="https://maps.google.com/?q=${r.latitude},${r.longitude}" target="_blank">
-                        View Location
-                    </a></p>
-                    <button class="status-button status-inprogress" onclick="updateStatus(${r.id}, 'In Progress')">In Progress</button>
-                    <button class="status-button status-cleared" onclick="updateStatus(${r.id}, 'Cleared')">Cleared</button>
-                </div>`;
-            });
+  <script>
+    fetch("/api/admin/reports")
+      .then(res => res.json())
+      .then(data => {
+        const div = document.getElementById("reports");
+
+        if (data.length === 0) {
+          div.innerHTML = "<p>No reports yet</p>";
+          return;
+        }
+
+        data.forEach(r => {
+          div.innerHTML += `
+            <div style="background:white; margin:15px; padding:15px; border-radius:8px;">
+              <img src="${r.image}" width="100"><br><br>
+              <b>Status:</b> ${r.status}<br>
+              <b>Location:</b>
+              <a target="_blank"
+                 href="https://www.google.com/maps?q=${r.latitude},${r.longitude}">
+                 View on Map
+              </a><br><br>
+
+              <button onclick="updateStatus(${r.id}, 'In Progress')">In Progress</button>
+              <button onclick="updateStatus(${r.id}, 'Cleared')">Cleared</button>
+            </div>
+          `;
         });
-}
+      });
 
-// 4️⃣ Update status
-function updateStatus(id, status) {
-    fetch("http://localhost:3000/update-status", {
+    function updateStatus(id, status) {
+      fetch("/api/admin/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, status })
-    }).then(loadReports);
-}
-
-// 5️⃣ Initial load
-loadReports();
-</script>
+      }).then(() => location.reload());
+    }
+  </script>
 
 </body>
 </html>
