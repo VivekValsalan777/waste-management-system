@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<div class="container">
+    <h2>Your Submitted Waste Reports</h2>
+    <div id="reports"></div>
+</div>
+
+<script>
+fetch("http://localhost:3000/reports")
+    .then(res => res.json())
+    .then(data => {
+        const div = document.getElementById("reports");
+        data.forEach(r => {
+            div.innerHTML += `
+            <div class="report-card">
+                <img src="http://localhost:3000/uploads/${r.image}" alt="Waste Image">
+                <p><b>Status:</b> ${r.status}</p>
+                <p><b>Date:</b> ${new Date(r.date).toLocaleString()}</p>
+                <p><a href="https://maps.google.com/?q=${r.latitude},${r.longitude}" target="_blank">
+                    View Location
+                </a></p>
+            </div>`;
+        });
+    });
+</script>
+
+</body>
+</html>

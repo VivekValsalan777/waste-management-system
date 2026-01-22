@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Waste Report</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+  <h2>Report Waste</h2>
+
+  <input type="file" id="photo" accept="image/*" capture="environment">
+  <button onclick="getLocation()">Get Location</button>
+  <p id="locationText"></p>
+  <button onclick="submitReport()">Submit Report</button>
+</div>
+
+<script>
+let latitude, longitude;
+
+function getLocation() {
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      latitude = position.coords.latitude;
+      longitude = position.coords.longitude;
+      document.getElementById("locationText").innerText = "Location captured";
+    },
+    () => alert("Please allow location access")
+  );
+}
+
+function submitReport() {
+  const photo = document.getElementById("photo").files[0];
+  if (!photo || !latitude) { alert("Upload photo and get location first"); return; }
+
+  const formData = new FormData();
+  formData.append("photo", photo);
+  formData.append("latitude", latitude);
+  formData.append("longitude", longitude);
+
+  fetch("http://localhost:3000/report", { method: "POST", body: formData })
+    .then(() => alert("Report sent successfully"))
+    .catch(() => alert("Error sending report"));
+}
+</script>
+
+</body>
+</html>

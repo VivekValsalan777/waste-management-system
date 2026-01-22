@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<div class="container">
+    <h2>Admin Dashboard</h2>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+    <div id="reports"></div>
+</div>
+
+<script>
+// 1️⃣ Login check
+if (!localStorage.getItem("adminLoggedIn")) {
+    window.location.href = "admin-login.html";
+}
+
+// 2️⃣ Logout
+function logout() {
+    localStorage.removeItem("adminLoggedIn");
+    window.location.href = "admin-login.html";
+}
+
+// 3️⃣ Load reports as cards
+function loadReports() {
+    fetch("http://localhost:3000/reports")
+        .then(res => res.json())
+        .then(data => {
+            const div = document.getElementById("reports");
+            div.innerHTML = "";
+            data.forEach(r => {
+                div.innerHTML += `
+                <div class="report-card">
+                    <img src="http://localhost:3000/uploads/${r.image}" alt="Waste Image">
+                    <p><b>Status:</b> ${r.status}</p>
+                    <p><b>Date:</b> ${new Date(r.date).toLocaleString()}</p>
+                    <p><a href="https://maps.google.com/?q=${r.latitude},${r.longitude}" target="_blank">
+                        View Location
+                    </a></p>
+                    <button class="status-button status-inprogress" onclick="updateStatus(${r.id}, 'In Progress')">In Progress</button>
+                    <button class="status-button status-cleared" onclick="updateStatus(${r.id}, 'Cleared')">Cleared</button>
+                </div>`;
+            });
+        });
+}
+
+// 4️⃣ Update status
+function updateStatus(id, status) {
+    fetch("http://localhost:3000/update-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status })
+    }).then(loadReports);
+}
+
+// 5️⃣ Initial load
+loadReports();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,153 @@
+/* General body styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to right, #e0f7fa, #ffffff);
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+/* Container for all pages */
+.container {
+    width: 90%;
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+}
+
+/* Headers */
+h2 {
+    text-align: center;
+    color: #00796b;
+    margin-bottom: 25px;
+}
+
+/* Buttons */
+button {
+    background-color: #00796b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s, transform 0.2s;
+}
+
+button:hover {
+    background-color: #004d40;
+    transform: scale(1.05);
+}
+
+/* File input and text inputs */
+input[type="file"], input[type="text"], input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+/* Report card styles (user dashboard) */
+.report-card {
+    background: #e0f2f1;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+
+.report-card:hover {
+    transform: translateY(-5px);
+}
+
+.report-card img {
+    width: 100%;
+    border-radius: 12px;
+    margin-bottom: 10px;
+}
+
+.report-card p {
+    margin: 5px 0;
+}
+
+/* Admin Dashboard Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    table-layout: fixed;
+}
+
+table, th, td {
+    border: 1px solid #ccc;
+}
+
+th, td {
+    padding: 10px;
+    text-align: center;
+    font-size: 14px;
+}
+
+th {
+    background-color: #00796b;
+    color: white;
+}
+
+td img {
+    max-width: 100px;
+    border-radius: 8px;
+}
+
+/* Status Buttons */
+.status-button {
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: none;
+    color: white;
+    margin: 2px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.status-inprogress { background-color: #fbc02d; }
+.status-cleared { background-color: #388e3c; }
+
+/* Logout button */
+.logout-btn {
+    float: right;
+    margin-bottom: 10px;
+    background-color: #d32f2f;
+}
+
+.logout-btn:hover {
+    background-color: #9a0007;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 600px) {
+    .container {
+        width: 95%;
+        padding: 15px;
+    }
+
+    input[type="file"], input[type="text"], input[type="password"], button {
+        font-size: 13px;
+        padding: 8px;
+    }
+
+    table, th, td {
+        font-size: 12px;
+        padding: 6px;
+    }
+
+    .status-button {
+        font-size: 11px;
+        padding: 4px 6px;
+    }
+}
