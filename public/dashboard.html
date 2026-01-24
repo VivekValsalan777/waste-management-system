@@ -1,34 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>User Dashboard</title>
-    <link rel="stylesheet" href="style.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
 </head>
 <body>
 
-<div class="container">
-    <h2>Your Submitted Waste Reports</h2>
-    <div id="reports"></div>
-</div>
+<h2>Admin Dashboard</h2>
+
+<button onclick="loadReports()">Load Reports</button>
+
+<table border="1" cellpadding="8" cellspacing="0">
+  <thead>
+    <tr>
+      <th>Report ID</th>
+      <th>Status</th>
+      <th>Latitude</th>
+      <th>Longitude</th>
+      <th>Created At</th>
+    </tr>
+  </thead>
+  <tbody id="reportTable"></tbody>
+</table>
+
+<br>
+<a href="admin.html">Back</a>
 
 <script>
-fetch("http://localhost:3000/reports")
+function loadReports() {
+  fetch("/admin/reports")
     .then(res => res.json())
     .then(data => {
-        const div = document.getElementById("reports");
-        data.forEach(r => {
-            div.innerHTML += `
-            <div class="report-card">
-                <img src="http://localhost:3000/uploads/${r.image}" alt="Waste Image">
-                <p><b>Status:</b> ${r.status}</p>
-                <p><b>Date:</b> ${new Date(r.date).toLocaleString()}</p>
-                <p><a href="https://maps.google.com/?q=${r.latitude},${r.longitude}" target="_blank">
-                    View Location
-                </a></p>
-            </div>`;
-        });
+      const table = document.getElementById("reportTable");
+      table.innerHTML = "";
+
+      if (data.length === 0) {
+        table.innerHTML =
+          "<tr><td colspan='5'>No reports found</td></tr>";
+        return;
+      }
+
+      data.forEach(report => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${report.reportId}</td>
+          <td>${report.status}</td>
+          <td>${report.location.latitude}</td>
+          <td>${report.location.longitude}</td>
+          <td>${new Date(report.createdAt).toLocaleString()}</td>
+        `;
+
+        table.appendChild(row);
+      });
+    })
+    .catch(err => {
+      alert("Failed to load reports");
+      console.error(err);
     });
+}
 </script>
 
 </body>
