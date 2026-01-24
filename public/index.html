@@ -1,26 +1,21 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Report Waste</title>
-</head>
+<head><title>Report Waste</title></head>
 <body>
 
 <h2>Report Waste</h2>
 
 <form id="reportForm" enctype="multipart/form-data">
   <input type="file" name="image" required><br><br>
-
   <input type="hidden" id="lat" name="latitude">
   <input type="hidden" id="lon" name="longitude">
-
-  <button type="submit">Submit Report</button>
+  <button type="submit">Submit</button>
 </form>
 
 <p id="msg"></p>
 
-<a href="track.html">Track Report</a>
-<br>
-<a href="role-select.html">Back to Role Selection</a>
+<a href="track.html">Track Report</a><br>
+<a href="role-select.html">Back</a>
 
 <script>
 navigator.geolocation.getCurrentPosition(
@@ -33,18 +28,15 @@ navigator.geolocation.getCurrentPosition(
 
 reportForm.onsubmit = e => {
   e.preventDefault();
-
-  const data = new FormData(reportForm);
-
-  fetch("/submit-report", { method: "POST", body: data })
+  fetch("/submit-report", {
+    method: "POST",
+    body: new FormData(reportForm)
+  })
     .then(r => r.json())
     .then(d => {
-      if (d.success) {
-        msg.innerText = "Report submitted. ID: " + d.reportId;
-        reportForm.reset();
-      } else {
-        msg.innerText = "Submission failed.";
-      }
+      msg.innerText = d.success
+        ? "Report ID: " + d.reportId + " (Save this ID)"
+        : "Submission failed";
     });
 };
 </script>
