@@ -1,67 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Track Waste Report</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Report</title>
 </head>
 <body>
 
-  <h2>Track Your Waste Report</h2>
+<h2>Track Waste Report</h2>
 
-  <p>Enter the Report ID you received after submitting the complaint.</p>
+<input id="rid" placeholder="Enter Report ID">
+<button onclick="track()">Track</button>
 
-  <input
-    type="text"
-    id="reportId"
-    placeholder="Example: WR-1700000000000"
-    style="width: 250px;"
-  >
-  <br><br>
+<pre id="out"></pre>
 
-  <button onclick="trackReport()">Track Report</button>
+<a href="index.html">Back to Report Page</a>
+<br>
+<a href="role-select.html">Back to Role Selection</a>
 
-  <p id="message"></p>
-
-  <div id="result" style="white-space: pre-line;"></div>
-
-  <br>
-  <a href="index.html">← Back to Report Page</a>
-
-  <script>
-    function trackReport() {
-      const reportId = document.getElementById("reportId").value.trim();
-      const messageEl = document.getElementById("message");
-      const resultEl = document.getElementById("result");
-
-      messageEl.innerText = "";
-      resultEl.innerText = "";
-
-      if (!reportId) {
-        messageEl.innerText = "Please enter a Report ID.";
-        return;
+<script>
+function track() {
+  fetch("/track/" + rid.value)
+    .then(r => r.json())
+    .then(d => {
+      if (d.message) {
+        out.innerText = d.message;
+      } else {
+        out.innerText =
+          "Report ID: " + d.reportId + "\n" +
+          "Status: " + d.status + "\n" +
+          "Submitted: " + d.createdAt;
       }
-
-      fetch(`/track/${reportId}`)
-        .then(res => {
-          if (!res.ok) {
-            throw new Error("Report not found");
-          }
-          return res.json();
-        })
-        .then(data => {
-          resultEl.innerText =
-            "Report ID: " + data.reportId + "\n" +
-            "Status: " + data.status + "\n" +
-            "Submitted At: " + new Date(data.createdAt).toLocaleString() + "\n" +
-            "Latitude: " + data.location.latitude + "\n" +
-            "Longitude: " + data.location.longitude;
-        })
-        .catch(() => {
-          messageEl.innerText = "No report found with this Report ID.";
-        });
-    }
-  </script>
+    });
+}
+</script>
 
 </body>
 </html>
