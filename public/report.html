@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Report Waste</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -17,31 +18,39 @@
     <form id="reportForm" enctype="multipart/form-data">
       <input type="file" name="image" accept="image/*" required>
 
+      <!-- Location -->
       <input type="hidden" name="latitude" id="lat">
       <input type="hidden" name="longitude" id="lng">
 
-      <button class="primary">Submit Report</button>
+      <button class="primary" type="submit">Submit Report</button>
     </form>
 
     <p id="msg"></p>
 
     <div id="reportBox" style="display:none;">
       <strong>Your Report ID:</strong>
-      <div class="card"><span id="rid"></span></div>
+      <div class="card">
+        <span id="rid"></span>
+      </div>
       <a class="link" href="track.html">Track Report</a>
     </div>
   </div>
 </div>
 
 <script>
-navigator.geolocation.getCurrentPosition(p => {
-  lat.value = p.coords.latitude;
-  lng.value = p.coords.longitude;
-});
+/* GET LOCATION */
+navigator.geolocation.getCurrentPosition(
+  p => {
+    lat.value = p.coords.latitude;
+    lng.value = p.coords.longitude;
+  },
+  () => alert("Location permission is required")
+);
 
+/* SUBMIT */
 reportForm.onsubmit = async e => {
   e.preventDefault();
-  msg.innerText = "Submitting...";
+  msg.textContent = "Submitting report...";
 
   const res = await fetch("/submit-report", {
     method: "POST",
@@ -51,11 +60,13 @@ reportForm.onsubmit = async e => {
   const data = await res.json();
 
   if (data.success) {
-    rid.innerText = data.reportId;
+    rid.textContent = data.reportId;
     reportBox.style.display = "block";
-    msg.innerText = "Submitted successfully";
+    msg.textContent = "Report submitted successfully";
+    msg.style.color = "green";
   } else {
-    msg.innerText = "Submission failed";
+    msg.textContent = "Submission failed";
+    msg.style.color = "red";
   }
 };
 </script>
