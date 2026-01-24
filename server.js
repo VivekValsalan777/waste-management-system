@@ -1,116 +1,99 @@
 const express = require("express");
 const fs = require("fs");
-const path = require("path");
 const multer = require("multer");
+const path = require("path");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// Middleware
+// Ensure uploads folder exists
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// 👇 FORCE ROLE SELECTION AS FIRST PAGE
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "role-select.html"));
+});
+
+// Serve static files
 app.use(express.static("public"));
 
-// Storage for uploaded images
+// Multer setup
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  }
+  destination: (req, file, cb) => cb(null, "uploads"),
+  filename: (req, file, cb) =>
+    cb(null, Date.now() + "-" + file.originalname)
 });
 const upload = multer({ storage });
 
-// Data file
 const REPORTS_FILE = "reports.json";
 
-// Helper: read reports
+// Helpers
 function readReports() {
   if (!fs.existsSync(REPORTS_FILE)) return [];
   return JSON.parse(fs.readFileSync(REPORTS_FILE));
 }
-
-// Helper: write reports
 function writeReports(data) {
   fs.writeFileSync(REPORTS_FILE, JSON.stringify(data, null, 2));
 }
 
-// ===============================
-// SUBMIT REPORT
-// ===============================
+// ================= SUBMIT REPORT =================
 app.post("/submit-report", upload.single("image"), (req, res) => {
   const { latitude, longitude } = req.body;
 
   if (!req.file || !latitude || !longitude) {
-    return res.status(400).json({ message: "Missing data" });
+    return res.status(400).json({ success: false });
   }
 
   const reports = readReports();
-
   const reportId = "WR-" + Date.now();
 
-  const newReport = {
+  reports.push({
     reportId,
     image: req.file.filename,
-    location: {
-      latitude,
-      longitude
-    },
+    location: { latitude, longitude },
     status: "Pending",
     createdAt: new Date().toISOString()
-  };
-
-  reports.push(newReport);
-  writeReports(reports);
-
-  res.json({
-    success: true,
-    reportId
   });
+
+  writeReports(reports);
+  res.json({ success: true, reportId });
 });
 
-// ===============================
-// TRACK REPORT
-// ===============================
+// ================= TRACK REPORT =================
 app.get("/track/:reportId", (req, res) => {
-  const { reportId } = req.params;
   const reports = readReports();
-
-  const report = reports.find(r => r.reportId === reportId);
+  const report = reports.find(r => r.reportId === req.params.reportId);
 
   if (!report) {
     return res.status(404).json({ message: "Report not found" });
   }
-
   res.json(report);
 });
 
-// ===============================
-// ADMIN: GET ALL REPORTS
-// ===============================
+// ================= ADMIN =================
 app.get("/admin/reports", (req, res) => {
   res.json(readReports());
 });
 
-// ===============================
-// ADMIN: UPDATE STATUS
-// ===============================
 app.post("/admin/update-status", (req, res) => {
   const { reportId, status } = req.body;
   const reports = readReports();
-
   const report = reports.find(r => r.reportId === reportId);
+
   if (!report) {
-    return res.status(404).json({ message: "Report not found" });
+    return res.status(404).json({ message: "Not found" });
   }
 
   report.status = status;
   writeReports(reports);
-
   res.json({ success: true });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () =>
+  console.log("Server running on port", PORT)
+);
