@@ -2,58 +2,81 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Track Report</title>
+  <title>Report Waste</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header>
-  <h1>Track Report</h1>
+  <h1>Waste Management</h1>
 </header>
 
 <div class="container">
   <div class="card">
-    <h2>Report Status</h2>
+    <h2>Report Waste</h2>
 
-    <input id="tid" placeholder="Enter Report ID">
-    <button class="primary" onclick="track()">Track</button>
+    <!-- REPORT FORM (UNCHANGED UI) -->
+    <form id="reportForm" enctype="multipart/form-data">
+      <input type="file" name="image" accept="image/*" required>
 
-    <div id="result" style="margin-top:20px;"></div>
+      <input type="hidden" name="latitude" id="lat">
+      <input type="hidden" name="longitude" id="lng">
+
+      <button class="primary" type="submit">Submit Report</button>
+    </form>
+
+    <!-- STATUS MESSAGE -->
+    <p id="msg"></p>
+
+    <!-- TRACK OPTION (ADDED, UI CONSISTENT) -->
+    <div id="trackSection" style="display:none;">
+      <p><strong>Your Report ID:</strong></p>
+      <div class="card">
+        <span id="rid"></span>
+      </div>
+
+      <a class="link" id="trackLink">Track Report</a>
+    </div>
   </div>
 </div>
 
 <script>
-/* AUTO-FILL REPORT ID FROM URL */
-const params = new URLSearchParams(window.location.search);
-if (params.get("rid")) {
-  tid.value = params.get("rid");
-  track();
-}
-
-/* TRACK FUNCTION */
-async function track() {
-  result.innerHTML = "Loading...";
-
-  const res = await fetch("/track/" + tid.value);
-
-  if (!res.ok) {
-    result.innerHTML = "Report not found";
-    return;
+/* GET LOCATION (UNCHANGED) */
+navigator.geolocation.getCurrentPosition(
+  pos => {
+    lat.value = pos.coords.latitude;
+    lng.value = pos.coords.longitude;
+  },
+  () => {
+    msg.innerText = "Location permission is required";
   }
+);
 
-  const r = await res.json();
+/* SUBMIT REPORT (UNCHANGED LOGIC) */
+reportForm.onsubmit = async e => {
+  e.preventDefault();
+  msg.innerText = "Submitting report...";
 
-  result.innerHTML = `
-    <p><strong>Report ID:</strong> ${r.reportId}</p>
-    <p><strong>Status:</strong> ${r.status}</p>
-    <p><strong>Date:</strong> ${new Date(r.createdAt).toLocaleString()}</p>
-    <p>
-      <strong>Location:</strong>
-      <a href="https://www.google.com/maps?q=${r.location.latitude},${r.location.longitude}"
-         target="_blank">View on Map</a>
-    </p>
-  `;
-}
+  const res = await fetch("/submit-report", {
+    method: "POST",
+    body: new FormData(reportForm)
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    msg.innerText = "Report submitted successfully";
+
+    rid.innerText = data.reportId;
+
+    // Set track link with report ID
+    trackLink.href = "track.html?rid=" + data.reportId;
+
+    trackSection.style.display = "block";
+  } else {
+    msg.innerText = "Submission failed";
+  }
+};
 </script>
 
 </body>
