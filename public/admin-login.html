@@ -1,16 +1,27 @@
 <!DOCTYPE html>
-<html>
-<head><title>Admin Login</title></head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
 <body>
 
-<h2>Admin Login</h2>
+<header>
+  <h1>Waste Management System</h1>
+</header>
 
-<input id="user" placeholder="Username"><br><br>
-<input id="pass" type="password" placeholder="Password"><br><br>
+<div class="container">
+  <div class="card">
+    <h2>Admin Login</h2>
 
-<button onclick="login()">Login</button>
+    <input id="user" placeholder="Username">
+    <input id="pass" type="password" placeholder="Password">
 
-<p id="msg"></p>
+    <button class="primary" onclick="login()">Login</button>
+    <p id="msg"></p>
+  </div>
+</div>
 
 <script>
 function login() {
@@ -22,14 +33,11 @@ function login() {
       password: pass.value
     })
   })
-    .then(r => r.json())
-    .then(d => {
-      if (d.success) {
-        location.href = "dashboard.html";
-      } else {
-        msg.innerText = "Invalid credentials";
-      }
-    });
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) location.href = "dashboard.html";
+    else msg.innerText = "Invalid credentials";
+  });
 }
 </script>
 
