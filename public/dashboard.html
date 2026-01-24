@@ -1,21 +1,27 @@
 <!DOCTYPE html>
-<html>
-<head><title>Admin Dashboard</title></head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+</head>
 <body>
 
 <h2>Admin Dashboard</h2>
 
 <button onclick="loadReports()">Load Reports</button>
 <button onclick="clearCompleted()">Clear Completed Reports</button>
+<button onclick="logout()">Logout</button>
+
+<hr>
 
 <h3>Active Reports</h3>
 <table border="1" cellpadding="6">
   <thead>
     <tr>
       <th>Image</th>
-      <th>ID</th>
+      <th>Report ID</th>
       <th>Status</th>
-      <th>Update</th>
+      <th>Update Status</th>
       <th>Location</th>
       <th>Date</th>
     </tr>
@@ -23,12 +29,14 @@
   <tbody id="activeTable"></tbody>
 </table>
 
+<hr>
+
 <h3>Completed Reports</h3>
 <table border="1" cellpadding="6">
   <thead>
     <tr>
       <th>Image</th>
-      <th>ID</th>
+      <th>Report ID</th>
       <th>Location</th>
       <th>Date</th>
     </tr>
@@ -37,63 +45,115 @@
 </table>
 
 <script>
+/* ================= AUTH CHECK ================= */
+fetch("/admin/reports").then(res => {
+  if (res.status === 401) {
+    alert("Unauthorized access. Please login.");
+    location.href = "admin-login.html";
+  }
+});
+
+/* ================= LOAD REPORTS ================= */
 function loadReports() {
   fetch("/admin/reports")
-    .then(r => r.json())
+    .then(res => res.json())
     .then(data => {
       activeTable.innerHTML = "";
       completedTable.innerHTML = "";
 
-      data.forEach(r => {
-        const map =
-          `https://www.google.com/maps?q=${r.location.latitude},${r.location.longitude}`;
+      if (data.length === 0) {
+        activeTable.innerHTML =
+          "<tr><td colspan='6'>No active reports</td></tr>";
+        completedTable.innerHTML =
+          "<tr><td colspan='4'>No completed reports</td></tr>";
+        return;
+      }
 
-        if (r.status === "Completed") {
+      data.forEach(report => {
+        const mapLink =
+          `https://www.google.com/maps?q=${report.location.latitude},${report.location.longitude}`;
+
+        if (report.status === "Completed") {
           completedTable.innerHTML += `
             <tr>
-              <td><img src="/uploads/${r.image}" width="80"></td>
-              <td>${r.reportId}</td>
-              <td><a href="${map}" target="_blank">Map</a></td>
-              <td>${new Date(r.createdAt).toLocaleString()}</td>
-            </tr>`;
+              <td>
+                <img src="/uploads/${report.image}" width="80">
+              </td>
+              <td>${report.reportId}</td>
+              <td>
+                <a href="${mapLink}" target="_blank">View Map</a>
+              </td>
+              <td>${new Date(report.createdAt).toLocaleString()}</td>
+            </tr>
+          `;
         } else {
           activeTable.innerHTML += `
             <tr>
-              <td><img src="/uploads/${r.image}" width="80"></td>
-              <td>${r.reportId}</td>
-              <td>${r.status}</td>
               <td>
-                <select id="s-${r.reportId}">
-                  <option ${r.status=="Pending"?"selected":""}>Pending</option>
-                  <option ${r.status=="In Progress"?"selected":""}>In Progress</option>
-                  <option ${r.status=="Completed"?"selected":""}>Completed</option>
-                </select>
-                <button onclick="updateStatus('${r.reportId}')">Save</button>
+                <img src="/uploads/${report.image}" width="80">
               </td>
-              <td><a href="${map}" target="_blank">Map</a></td>
-              <td>${new Date(r.createdAt).toLocaleString()}</td>
-            </tr>`;
+              <td>${report.reportId}</td>
+              <td>${report.status}</td>
+              <td>
+                <select id="status-${report.reportId}">
+                  <option ${report.status === "Pending" ? "selected" : ""}>
+                    Pending
+                  </option>
+                  <option ${report.status === "In Progress" ? "selected" : ""}>
+                    In Progress
+                  </option>
+                  <option ${report.status === "Completed" ? "selected" : ""}>
+                    Completed
+                  </option>
+                </select>
+                <button onclick="updateStatus('${report.reportId}')">
+                  Save
+                </button>
+              </td>
+              <td>
+                <a href="${mapLink}" target="_blank">View Map</a>
+              </td>
+              <td>${new Date(report.createdAt).toLocaleString()}</td>
+            </tr>
+          `;
         }
       });
     });
 }
 
-function updateStatus(id) {
-  const status = document.getElementById("s-" + id).value;
+/* ================= UPDATE STATUS ================= */
+function updateStatus(reportId) {
+  const status =
+    document.getElementById("status-" + reportId).value;
+
   fetch("/admin/update-status", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ reportId: id, status })
+    body: JSON.stringify({ reportId, status })
   })
-    .then(() => loadReports());
+    .then(() => {
+      alert("Status updated successfully");
+      loadReports();
+    });
 }
 
+/* ================= CLEAR COMPLETED ================= */
 function clearCompleted() {
-  if (!confirm("Clear all completed reports?")) return;
+  if (!confirm("Are you sure you want to delete all completed reports?"))
+    return;
+
   fetch("/admin/clear-completed", { method: "POST" })
     .then(() => {
       alert("Completed reports cleared");
       loadReports();
+    });
+}
+
+/* ================= LOGOUT ================= */
+function logout() {
+  fetch("/admin/logout", { method: "POST" })
+    .then(() => {
+      location.href = "admin-login.html";
     });
 }
 </script>
