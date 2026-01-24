@@ -1,45 +1,29 @@
 <!DOCTYPE html>
-<html>
-<head><title>Report Waste</title></head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Report Waste</title>
+  <link rel="stylesheet" href="style.css">
+</head>
 <body>
 
-<h2>Report Waste</h2>
+<header>
+  <h1>Waste Management</h1>
+</header>
 
-<form id="reportForm" enctype="multipart/form-data">
-  <input type="file" name="image" required><br><br>
-  <input type="hidden" id="lat" name="latitude">
-  <input type="hidden" id="lon" name="longitude">
-  <button type="submit">Submit</button>
-</form>
+<div class="container">
+  <div class="card">
+    <h2>Report Waste</h2>
 
-<p id="msg"></p>
+    <form id="reportForm" enctype="multipart/form-data">
+      <input type="file" name="image" required>
+      <button class="primary">Submit Report</button>
+    </form>
 
-<a href="track.html">Track Report</a><br>
-<a href="role-select.html">Back</a>
-
-<script>
-navigator.geolocation.getCurrentPosition(
-  pos => {
-    lat.value = pos.coords.latitude;
-    lon.value = pos.coords.longitude;
-  },
-  () => alert("Location permission required")
-);
-
-reportForm.onsubmit = e => {
-  e.preventDefault();
-  fetch("/submit-report", {
-    method: "POST",
-    body: new FormData(reportForm)
-  })
-    .then(r => r.json())
-    .then(d => {
-      msg.innerText = d.success
-        ? "Report ID: " + d.reportId + " (Save this ID)"
-        : "Submission failed";
-    });
-};
-</script>
+    <p id="msg"></p>
+    <a class="link" href="track.html">Track Report</a>
+  </div>
+</div>
 
 </body>
 </html>
