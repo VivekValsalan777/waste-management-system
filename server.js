@@ -12,12 +12,12 @@ if (!fs.existsSync("uploads")) fs.mkdirSync("uploads");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Role selection first
+// Role selection as home page
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "role-select.html"));
 });
 
-// Static files
+// Static folders
 app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
 
@@ -81,6 +81,13 @@ app.post("/admin/update-status", (req, res) => {
 
   report.status = status;
   writeReports(reports);
+  res.json({ success: true });
+});
+
+// Clear completed reports
+app.post("/admin/clear-completed", (req, res) => {
+  const activeReports = readReports().filter(r => r.status !== "Completed");
+  writeReports(activeReports);
   res.json({ success: true });
 });
 
