@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Track Report</title>
-</head>
+<head><title>Track Report</title></head>
 <body>
 
 <h2>Track Waste Report</h2>
@@ -12,9 +10,7 @@
 
 <pre id="out"></pre>
 
-<a href="index.html">Back to Report Page</a>
-<br>
-<a href="role-select.html">Back to Role Selection</a>
+<a href="index.html">Back</a>
 
 <script>
 function track() {
@@ -23,12 +19,18 @@ function track() {
     .then(d => {
       if (d.message) {
         out.innerText = d.message;
-      } else {
-        out.innerText =
-          "Report ID: " + d.reportId + "\n" +
-          "Status: " + d.status + "\n" +
-          "Submitted: " + d.createdAt;
+        return;
       }
+
+      const map =
+        `https://www.google.com/maps?q=${d.location.latitude},${d.location.longitude}`;
+
+      out.innerText =
+        `Report ID: ${d.reportId}
+Status: ${d.status}
+Date: ${new Date(d.createdAt).toLocaleString()}
+
+Map: ${map}`;
     });
 }
 </script>
