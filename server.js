@@ -20,24 +20,25 @@ if (!fs.existsSync("sessions")) fs.mkdirSync("sessions");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* ✅ FIXED SESSION STORE (NO MEMORYSTORE WARNING) */
 app.use(
   session({
-    store: new FileStore({
-      path: "./sessions",
-      retries: 0
-    }),
+    store: new FileStore({ path: "./sessions" }),
     secret: "waste-management-secret",
     resave: false,
     saveUninitialized: false
   })
 );
 
+/* ================= ROUTE: FIRST PAGE ================= */
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "role-select.html"));
+});
+
 /* ================= STATIC ================= */
 app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
 
-/* ================= AUTH MIDDLEWARE ================= */
+/* ================= AUTH ================= */
 function adminAuth(req, res, next) {
   if (req.session.admin) next();
   else res.status(401).json({ message: "Unauthorized" });
@@ -63,18 +64,13 @@ function writeReports(data) {
   fs.writeFileSync(REPORTS_FILE, JSON.stringify(data, null, 2));
 }
 
-/* ================= ROUTES ================= */
-
-/* HOME */
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "role-select.html"));
-});
-
-/* USER SUBMIT */
+/* ================= USER SUBMIT ================= */
 app.post("/submit-report", upload.single("image"), (req, res) => {
   const { latitude, longitude } = req.body;
-  if (!req.file || !latitude || !longitude)
+
+  if (!req.file || !latitude || !longitude) {
     return res.status(400).json({ success: false });
+  }
 
   const reports = readReports();
   const reportId = "WR-" + Date.now();
@@ -91,54 +87,36 @@ app.post("/submit-report", upload.single("image"), (req, res) => {
   res.json({ success: true, reportId });
 });
 
-/* USER TRACK */
+/* ================= TRACK ================= */
 app.get("/track/:id", (req, res) => {
   const report = readReports().find(r => r.reportId === req.params.id);
   if (!report) return res.status(404).json({ message: "Not found" });
   res.json(report);
 });
 
-/* ADMIN LOGIN */
+/* ================= ADMIN ================= */
 app.post("/admin/login", (req, res) => {
   const { username, password } = req.body;
   if (username === ADMIN_USER && password === ADMIN_PASS) {
     req.session.admin = true;
     res.json({ success: true });
-  } else {
-    res.json({ success: false });
-  }
+  } else res.json({ success: false });
 });
 
-/* ADMIN LOGOUT */
-app.post("/admin/logout", (req, res) => {
-  req.session.destroy(() => res.json({ success: true }));
-});
-
-/* ADMIN REPORTS */
 app.get("/admin/reports", adminAuth, (req, res) => {
   res.json(readReports());
 });
 
-/* UPDATE STATUS */
 app.post("/admin/update-status", adminAuth, (req, res) => {
   const { reportId, status } = req.body;
   const reports = readReports();
   const report = reports.find(r => r.reportId === reportId);
-  if (!report) return res.status(404).json({ message: "Not found" });
-
+  if (!report) return res.status(404).json({});
   report.status = status;
   writeReports(reports);
   res.json({ success: true });
 });
 
-/* CLEAR COMPLETED */
-app.post("/admin/clear-completed", adminAuth, (req, res) => {
-  const active = readReports().filter(r => r.status !== "Completed");
-  writeReports(active);
-  res.json({ success: true });
-});
-
-/* ================= SERVER ================= */
-app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
-});
+app.listen(PORT, () =>
+  console.log("Server running on port", PORT)
+);
