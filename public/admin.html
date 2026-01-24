@@ -1,53 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel</title>
 </head>
+<body>
 
-<body style="font-family:Arial; background:#f4f6f8;">
+<h2>Admin Panel</h2>
 
-  <h2 style="text-align:center;">Admin Dashboard</h2>
+<button onclick="location.href='dashboard.html'">
+  Open Dashboard
+</button>
 
-  <div id="reports"></div>
-
-  <script>
-    fetch("/api/admin/reports")
-      .then(res => res.json())
-      .then(data => {
-        const div = document.getElementById("reports");
-
-        if (data.length === 0) {
-          div.innerHTML = "<p>No reports yet</p>";
-          return;
-        }
-
-        data.forEach(r => {
-          div.innerHTML += `
-            <div style="background:white; margin:15px; padding:15px; border-radius:8px;">
-              <img src="${r.image}" width="100"><br><br>
-              <b>Status:</b> ${r.status}<br>
-              <b>Location:</b>
-              <a target="_blank"
-                 href="https://www.google.com/maps?q=${r.latitude},${r.longitude}">
-                 View on Map
-              </a><br><br>
-
-              <button onclick="updateStatus(${r.id}, 'In Progress')">In Progress</button>
-              <button onclick="updateStatus(${r.id}, 'Cleared')">Cleared</button>
-            </div>
-          `;
-        });
-      });
-
-    function updateStatus(id, status) {
-      fetch("/api/admin/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, status })
-      }).then(() => location.reload());
-    }
-  </script>
+<br><br>
+<a href="role-select.html">Logout</a>
 
 </body>
 </html>
