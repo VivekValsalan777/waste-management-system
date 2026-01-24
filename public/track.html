@@ -1,39 +1,26 @@
 <!DOCTYPE html>
-<html>
-<head><title>Track Report</title></head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Track Report</title>
+  <link rel="stylesheet" href="style.css">
+</head>
 <body>
 
-<h2>Track Waste Report</h2>
+<header>
+  <h1>Track Report</h1>
+</header>
 
-<input id="rid" placeholder="Enter Report ID">
-<button onclick="track()">Track</button>
+<div class="container">
+  <div class="card">
+    <h2>Track Your Report</h2>
 
-<pre id="out"></pre>
+    <input id="trackId" placeholder="Enter Report ID">
+    <button class="primary" onclick="track()">Track</button>
 
-<a href="index.html">Back</a>
-
-<script>
-function track() {
-  fetch("/track/" + rid.value)
-    .then(r => r.json())
-    .then(d => {
-      if (d.message) {
-        out.innerText = d.message;
-        return;
-      }
-
-      const map =
-        `https://www.google.com/maps?q=${d.location.latitude},${d.location.longitude}`;
-
-      out.innerText =
-        `Report ID: ${d.reportId}
-Status: ${d.status}
-Date: ${new Date(d.createdAt).toLocaleString()}
-
-Map: ${map}`;
-    });
-}
-</script>
+    <pre id="result"></pre>
+  </div>
+</div>
 
 </body>
 </html>
