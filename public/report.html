@@ -2,73 +2,58 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Report Waste</title>
+  <title>Track Report</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header>
-  <h1>Waste Management</h1>
+  <h1>Track Report</h1>
 </header>
 
 <div class="container">
   <div class="card">
-    <h2>Report Waste</h2>
+    <h2>Report Status</h2>
 
-    <form id="reportForm" enctype="multipart/form-data">
-      <input type="file" name="image" accept="image/*" required>
+    <input id="tid" placeholder="Enter Report ID">
+    <button class="primary" onclick="track()">Track</button>
 
-      <!-- Location -->
-      <input type="hidden" name="latitude" id="lat">
-      <input type="hidden" name="longitude" id="lng">
-
-      <button class="primary" type="submit">Submit Report</button>
-    </form>
-
-    <p id="msg"></p>
-
-    <div id="reportBox" style="display:none;">
-      <strong>Your Report ID:</strong>
-      <div class="card">
-        <span id="rid"></span>
-      </div>
-      <a class="link" href="track.html">Track Report</a>
-    </div>
+    <div id="result" style="margin-top:20px;"></div>
   </div>
 </div>
 
 <script>
-/* GET LOCATION */
-navigator.geolocation.getCurrentPosition(
-  p => {
-    lat.value = p.coords.latitude;
-    lng.value = p.coords.longitude;
-  },
-  () => alert("Location permission is required")
-);
+/* AUTO-FILL REPORT ID FROM URL */
+const params = new URLSearchParams(window.location.search);
+if (params.get("rid")) {
+  tid.value = params.get("rid");
+  track();
+}
 
-/* SUBMIT */
-reportForm.onsubmit = async e => {
-  e.preventDefault();
-  msg.textContent = "Submitting report...";
+/* TRACK FUNCTION */
+async function track() {
+  result.innerHTML = "Loading...";
 
-  const res = await fetch("/submit-report", {
-    method: "POST",
-    body: new FormData(reportForm)
-  });
+  const res = await fetch("/track/" + tid.value);
 
-  const data = await res.json();
-
-  if (data.success) {
-    rid.textContent = data.reportId;
-    reportBox.style.display = "block";
-    msg.textContent = "Report submitted successfully";
-    msg.style.color = "green";
-  } else {
-    msg.textContent = "Submission failed";
-    msg.style.color = "red";
+  if (!res.ok) {
+    result.innerHTML = "Report not found";
+    return;
   }
-};
+
+  const r = await res.json();
+
+  result.innerHTML = `
+    <p><strong>Report ID:</strong> ${r.reportId}</p>
+    <p><strong>Status:</strong> ${r.status}</p>
+    <p><strong>Date:</strong> ${new Date(r.createdAt).toLocaleString()}</p>
+    <p>
+      <strong>Location:</strong>
+      <a href="https://www.google.com/maps?q=${r.location.latitude},${r.location.longitude}"
+         target="_blank">View on Map</a>
+    </p>
+  `;
+}
 </script>
 
 </body>
