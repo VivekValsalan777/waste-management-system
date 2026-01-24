@@ -3,48 +3,47 @@ const fs = require("fs");
 const multer = require("multer");
 const path = require("path");
 const session = require("express-session");
+const FileStore = require("session-file-store")(session);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ================== CONFIG ==================
+/* ================= ADMIN CREDENTIALS ================= */
 const ADMIN_USER = "admin";
 const ADMIN_PASS = "admin123";
 
-// Ensure uploads folder exists
+/* ================= FOLDERS ================= */
 if (!fs.existsSync("uploads")) fs.mkdirSync("uploads");
+if (!fs.existsSync("sessions")) fs.mkdirSync("sessions");
 
+/* ================= MIDDLEWARE ================= */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session middleware
+/* ✅ FIXED SESSION STORE (NO MEMORYSTORE WARNING) */
 app.use(
   session({
+    store: new FileStore({
+      path: "./sessions",
+      retries: 0
+    }),
     secret: "waste-management-secret",
     resave: false,
     saveUninitialized: false
   })
 );
 
-// ================== HOME ==================
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "role-select.html"));
-});
-
-// ================== STATIC ==================
+/* ================= STATIC ================= */
 app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
 
-// ================== AUTH MIDDLEWARE ==================
+/* ================= AUTH MIDDLEWARE ================= */
 function adminAuth(req, res, next) {
-  if (req.session.admin) {
-    next();
-  } else {
-    res.status(401).json({ message: "Unauthorized" });
-  }
+  if (req.session.admin) next();
+  else res.status(401).json({ message: "Unauthorized" });
 }
 
-// ================== MULTER ==================
+/* ================= MULTER ================= */
 const storage = multer.diskStorage({
   destination: "uploads",
   filename: (req, file, cb) =>
@@ -52,18 +51,26 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// ================== DATA ==================
+/* ================= DATA ================= */
 const REPORTS_FILE = "reports.json";
 
-const readReports = () =>
-  fs.existsSync(REPORTS_FILE)
-    ? JSON.parse(fs.readFileSync(REPORTS_FILE))
-    : [];
+function readReports() {
+  if (!fs.existsSync(REPORTS_FILE)) return [];
+  return JSON.parse(fs.readFileSync(REPORTS_FILE));
+}
 
-const writeReports = data =>
+function writeReports(data) {
   fs.writeFileSync(REPORTS_FILE, JSON.stringify(data, null, 2));
+}
 
-// ================== USER ==================
+/* ================= ROUTES ================= */
+
+/* HOME */
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "role-select.html"));
+});
+
+/* USER SUBMIT */
 app.post("/submit-report", upload.single("image"), (req, res) => {
   const { latitude, longitude } = req.body;
   if (!req.file || !latitude || !longitude)
@@ -84,16 +91,16 @@ app.post("/submit-report", upload.single("image"), (req, res) => {
   res.json({ success: true, reportId });
 });
 
-app.get("/track/:reportId", (req, res) => {
-  const report = readReports().find(r => r.reportId === req.params.reportId);
-  if (!report) return res.status(404).json({ message: "Report not found" });
+/* USER TRACK */
+app.get("/track/:id", (req, res) => {
+  const report = readReports().find(r => r.reportId === req.params.id);
+  if (!report) return res.status(404).json({ message: "Not found" });
   res.json(report);
 });
 
-// ================== ADMIN LOGIN ==================
+/* ADMIN LOGIN */
 app.post("/admin/login", (req, res) => {
   const { username, password } = req.body;
-
   if (username === ADMIN_USER && password === ADMIN_PASS) {
     req.session.admin = true;
     res.json({ success: true });
@@ -102,17 +109,17 @@ app.post("/admin/login", (req, res) => {
   }
 });
 
+/* ADMIN LOGOUT */
 app.post("/admin/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.json({ success: true });
-  });
+  req.session.destroy(() => res.json({ success: true }));
 });
 
-// ================== ADMIN APIs (PROTECTED) ==================
+/* ADMIN REPORTS */
 app.get("/admin/reports", adminAuth, (req, res) => {
   res.json(readReports());
 });
 
+/* UPDATE STATUS */
 app.post("/admin/update-status", adminAuth, (req, res) => {
   const { reportId, status } = req.body;
   const reports = readReports();
@@ -124,13 +131,14 @@ app.post("/admin/update-status", adminAuth, (req, res) => {
   res.json({ success: true });
 });
 
+/* CLEAR COMPLETED */
 app.post("/admin/clear-completed", adminAuth, (req, res) => {
-  const activeReports = readReports().filter(r => r.status !== "Completed");
-  writeReports(activeReports);
+  const active = readReports().filter(r => r.status !== "Completed");
+  writeReports(active);
   res.json({ success: true });
 });
 
-// ================== SERVER ==================
-app.listen(PORT, () =>
-  console.log("Server running on port", PORT)
-);
+/* ================= SERVER ================= */
+app.listen(PORT, () => {
+  console.log("Server running on port", PORT);
+});
