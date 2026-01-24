@@ -1,43 +1,81 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Report Waste</title>
 </head>
 <body>
+
   <h2>Report Waste</h2>
 
   <form id="reportForm" enctype="multipart/form-data">
-    <input type="file" name="image" required><br><br>
+    <input type="file" name="image" accept="image/*" required><br><br>
+
     <input type="hidden" name="latitude" id="lat">
     <input type="hidden" name="longitude" id="lon">
-    <button type="submit">Submit</button>
+
+    <button type="submit">Submit Report</button>
   </form>
 
-  <p id="result"></p>
+  <p id="status"></p>
+
   <a href="track.html">Track your report</a>
 
   <script>
-    navigator.geolocation.getCurrentPosition(pos => {
-      document.getElementById("lat").value = pos.coords.latitude;
-      document.getElementById("lon").value = pos.coords.longitude;
-    });
+    const statusEl = document.getElementById("status");
+    const form = document.getElementById("reportForm");
 
-    document.getElementById("reportForm").addEventListener("submit", e => {
-      e.preventDefault();
+    // Get user location safely
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          document.getElementById("lat").value = position.coords.latitude;
+          document.getElementById("lon").value = position.coords.longitude;
+        },
+        error => {
+          statusEl.innerText = "Location access denied. Please allow location.";
+          form.querySelector("button").disabled = true;
+        }
+      );
+    } else {
+      statusEl.innerText = "Geolocation is not supported by your browser.";
+      form.querySelector("button").disabled = true;
+    }
 
-      const formData = new FormData(e.target);
+    // Handle form submission
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+
+      if (!lat.value || !lon.value) {
+        statusEl.innerText = "Location not available. Cannot submit report.";
+        return;
+      }
+
+      const formData = new FormData(form);
 
       fetch("/submit-report", {
         method: "POST",
         body: formData
       })
-      .then(res => res.json())
+      .then(response => response.json())
       .then(data => {
-        document.getElementById("result").innerText =
-          "Report submitted successfully.\nYour Report ID: " + data.reportId +
-          "\nPlease save this ID to track your report.";
+        if (!data.success) {
+          statusEl.innerText = "Submission failed. Try again.";
+          return;
+        }
+
+        statusEl.innerText =
+          "Report submitted successfully.\n" +
+          "Your Report ID: " + data.reportId + "\n" +
+          "Please save this ID for tracking.";
+        
+        form.reset();
+      })
+      .catch(() => {
+        statusEl.innerText = "Server error. Please try later.";
       });
     });
   </script>
+
 </body>
 </html>
