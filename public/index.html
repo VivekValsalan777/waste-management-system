@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
   <title>Report Waste</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -16,82 +15,49 @@
     <h2>Report Waste</h2>
 
     <form id="reportForm" enctype="multipart/form-data">
-      <input type="file" id="imageInput" name="image" accept="image/*" required>
+      <input type="file" name="image" accept="image/*" required>
 
-      <!-- Image preview -->
-      <img id="preview" style="display:none; margin-top:10px; max-width:100%; border-radius:6px;">
+      <input type="hidden" name="latitude" id="lat">
+      <input type="hidden" name="longitude" id="lng">
 
-      <button class="primary" type="submit">Submit Report</button>
+      <button class="primary">Submit Report</button>
     </form>
 
-    <!-- Status messages -->
-    <p id="statusMsg" style="margin-top:15px;"></p>
+    <p id="msg"></p>
 
-    <!-- Report ID box -->
-    <div id="reportBox" style="display:none; margin-top:15px;">
+    <div id="reportBox" style="display:none;">
       <strong>Your Report ID:</strong>
-      <div style="background:#f1f5f9; padding:10px; border-radius:5px; margin-top:5px;">
-        <span id="reportId"></span>
-      </div>
-      <p style="margin-top:8px; font-size:14px;">
-        Save this ID to track your report status.
-      </p>
+      <div class="card"><span id="rid"></span></div>
       <a class="link" href="track.html">Track Report</a>
     </div>
   </div>
 </div>
 
 <script>
-const form = document.getElementById("reportForm");
-const statusMsg = document.getElementById("statusMsg");
-const reportBox = document.getElementById("reportBox");
-const reportIdSpan = document.getElementById("reportId");
-const preview = document.getElementById("preview");
-const imageInput = document.getElementById("imageInput");
-
-/* IMAGE PREVIEW */
-imageInput.addEventListener("change", () => {
-  const file = imageInput.files[0];
-  if (file) {
-    preview.src = URL.createObjectURL(file);
-    preview.style.display = "block";
-  }
+navigator.geolocation.getCurrentPosition(p => {
+  lat.value = p.coords.latitude;
+  lng.value = p.coords.longitude;
 });
 
-/* FORM SUBMIT */
-form.addEventListener("submit", async (e) => {
+reportForm.onsubmit = async e => {
   e.preventDefault();
+  msg.innerText = "Submitting...";
 
-  statusMsg.textContent = "Submitting report...";
-  reportBox.style.display = "none";
+  const res = await fetch("/submit-report", {
+    method: "POST",
+    body: new FormData(reportForm)
+  });
 
-  const formData = new FormData(form);
+  const data = await res.json();
 
-  try {
-    const res = await fetch("/submit-report", {
-      method: "POST",
-      body: formData
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      statusMsg.textContent = "Report submitted successfully.";
-      statusMsg.style.color = "green";
-
-      reportIdSpan.textContent = data.reportId;
-      reportBox.style.display = "block";
-
-      form.reset();
-      preview.style.display = "none";
-    } else {
-      throw new Error("Submission failed");
-    }
-  } catch (err) {
-    statusMsg.textContent = "Error submitting report. Please try again.";
-    statusMsg.style.color = "red";
+  if (data.success) {
+    rid.innerText = data.reportId;
+    reportBox.style.display = "block";
+    msg.innerText = "Submitted successfully";
+  } else {
+    msg.innerText = "Submission failed";
   }
-});
+};
 </script>
 
 </body>
