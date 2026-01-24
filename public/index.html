@@ -1,81 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
   <title>Report Waste</title>
 </head>
 <body>
 
-  <h2>Report Waste</h2>
+<h2>Report Waste</h2>
 
-  <form id="reportForm" enctype="multipart/form-data">
-    <input type="file" name="image" accept="image/*" required><br><br>
+<form id="reportForm" enctype="multipart/form-data">
+  <input type="file" name="image" required><br><br>
 
-    <input type="hidden" name="latitude" id="lat">
-    <input type="hidden" name="longitude" id="lon">
+  <input type="hidden" id="lat" name="latitude">
+  <input type="hidden" id="lon" name="longitude">
 
-    <button type="submit">Submit Report</button>
-  </form>
+  <button type="submit">Submit Report</button>
+</form>
 
-  <p id="status"></p>
+<p id="msg"></p>
 
-  <a href="track.html">Track your report</a>
+<a href="track.html">Track Report</a>
+<br>
+<a href="role-select.html">Back to Role Selection</a>
 
-  <script>
-    const statusEl = document.getElementById("status");
-    const form = document.getElementById("reportForm");
+<script>
+navigator.geolocation.getCurrentPosition(
+  pos => {
+    lat.value = pos.coords.latitude;
+    lon.value = pos.coords.longitude;
+  },
+  () => alert("Location permission required")
+);
 
-    // Get user location safely
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          document.getElementById("lat").value = position.coords.latitude;
-          document.getElementById("lon").value = position.coords.longitude;
-        },
-        error => {
-          statusEl.innerText = "Location access denied. Please allow location.";
-          form.querySelector("button").disabled = true;
-        }
-      );
-    } else {
-      statusEl.innerText = "Geolocation is not supported by your browser.";
-      form.querySelector("button").disabled = true;
-    }
+reportForm.onsubmit = e => {
+  e.preventDefault();
 
-    // Handle form submission
-    form.addEventListener("submit", event => {
-      event.preventDefault();
+  const data = new FormData(reportForm);
 
-      if (!lat.value || !lon.value) {
-        statusEl.innerText = "Location not available. Cannot submit report.";
-        return;
+  fetch("/submit-report", { method: "POST", body: data })
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) {
+        msg.innerText = "Report submitted. ID: " + d.reportId;
+        reportForm.reset();
+      } else {
+        msg.innerText = "Submission failed.";
       }
-
-      const formData = new FormData(form);
-
-      fetch("/submit-report", {
-        method: "POST",
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (!data.success) {
-          statusEl.innerText = "Submission failed. Try again.";
-          return;
-        }
-
-        statusEl.innerText =
-          "Report submitted successfully.\n" +
-          "Your Report ID: " + data.reportId + "\n" +
-          "Please save this ID for tracking.";
-        
-        form.reset();
-      })
-      .catch(() => {
-        statusEl.innerText = "Server error. Please try later.";
-      });
     });
-  </script>
+};
+</script>
 
 </body>
 </html>
