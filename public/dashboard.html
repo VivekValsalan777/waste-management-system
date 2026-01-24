@@ -4,8 +4,11 @@
 <body>
 
 <h2>Admin Dashboard</h2>
-<button onclick="load()">Load Reports</button>
 
+<button onclick="loadReports()">Load Reports</button>
+<button onclick="clearCompleted()">Clear Completed Reports</button>
+
+<h3>Active Reports</h3>
 <table border="1" cellpadding="6">
   <thead>
     <tr>
@@ -17,48 +20,80 @@
       <th>Date</th>
     </tr>
   </thead>
-  <tbody id="table"></tbody>
+  <tbody id="activeTable"></tbody>
+</table>
+
+<h3>Completed Reports</h3>
+<table border="1" cellpadding="6">
+  <thead>
+    <tr>
+      <th>Image</th>
+      <th>ID</th>
+      <th>Location</th>
+      <th>Date</th>
+    </tr>
+  </thead>
+  <tbody id="completedTable"></tbody>
 </table>
 
 <script>
-function load() {
+function loadReports() {
   fetch("/admin/reports")
     .then(r => r.json())
     .then(data => {
-      table.innerHTML = "";
+      activeTable.innerHTML = "";
+      completedTable.innerHTML = "";
+
       data.forEach(r => {
         const map =
           `https://www.google.com/maps?q=${r.location.latitude},${r.location.longitude}`;
-        table.innerHTML += `
-          <tr>
-            <td><img src="/uploads/${r.image}" width="100"></td>
-            <td>${r.reportId}</td>
-            <td>${r.status}</td>
-            <td>
-              <select id="s-${r.reportId}">
-                <option ${r.status=="Pending"?"selected":""}>Pending</option>
-                <option ${r.status=="In Progress"?"selected":""}>In Progress</option>
-                <option ${r.status=="Completed"?"selected":""}>Completed</option>
-              </select>
-              <button onclick="update('${r.reportId}')">Save</button>
-            </td>
-            <td><a href="${map}" target="_blank">View Map</a></td>
-            <td>${new Date(r.createdAt).toLocaleString()}</td>
-          </tr>`;
+
+        if (r.status === "Completed") {
+          completedTable.innerHTML += `
+            <tr>
+              <td><img src="/uploads/${r.image}" width="80"></td>
+              <td>${r.reportId}</td>
+              <td><a href="${map}" target="_blank">Map</a></td>
+              <td>${new Date(r.createdAt).toLocaleString()}</td>
+            </tr>`;
+        } else {
+          activeTable.innerHTML += `
+            <tr>
+              <td><img src="/uploads/${r.image}" width="80"></td>
+              <td>${r.reportId}</td>
+              <td>${r.status}</td>
+              <td>
+                <select id="s-${r.reportId}">
+                  <option ${r.status=="Pending"?"selected":""}>Pending</option>
+                  <option ${r.status=="In Progress"?"selected":""}>In Progress</option>
+                  <option ${r.status=="Completed"?"selected":""}>Completed</option>
+                </select>
+                <button onclick="updateStatus('${r.reportId}')">Save</button>
+              </td>
+              <td><a href="${map}" target="_blank">Map</a></td>
+              <td>${new Date(r.createdAt).toLocaleString()}</td>
+            </tr>`;
+        }
       });
     });
 }
 
-function update(id) {
+function updateStatus(id) {
   const status = document.getElementById("s-" + id).value;
   fetch("/admin/update-status", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ reportId: id, status })
   })
+    .then(() => loadReports());
+}
+
+function clearCompleted() {
+  if (!confirm("Clear all completed reports?")) return;
+  fetch("/admin/clear-completed", { method: "POST" })
     .then(() => {
-      alert("Status updated");
-      load();
+      alert("Completed reports cleared");
+      loadReports();
     });
 }
 </script>
