@@ -4,7 +4,34 @@
 <body>
 
 <h2>Admin Login</h2>
-<button onclick="location.href='dashboard.html'">Login</button>
+
+<input id="user" placeholder="Username"><br><br>
+<input id="pass" type="password" placeholder="Password"><br><br>
+
+<button onclick="login()">Login</button>
+
+<p id="msg"></p>
+
+<script>
+function login() {
+  fetch("/admin/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: user.value,
+      password: pass.value
+    })
+  })
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) {
+        location.href = "dashboard.html";
+      } else {
+        msg.innerText = "Invalid credentials";
+      }
+    });
+}
+</script>
 
 </body>
 </html>
