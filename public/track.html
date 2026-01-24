@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
   <title>Track Report</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -13,14 +12,19 @@
 
 <div class="container">
   <div class="card">
-    <h2>Track Your Report</h2>
-
-    <input id="trackId" placeholder="Enter Report ID">
+    <input id="tid" placeholder="Enter Report ID">
     <button class="primary" onclick="track()">Track</button>
-
-    <pre id="result"></pre>
+    <pre id="out"></pre>
   </div>
 </div>
+
+<script>
+async function track() {
+  const res = await fetch("/track/" + tid.value);
+  out.textContent = res.ok ? JSON.stringify(await res.json(), null, 2)
+                           : "Report not found";
+}
+</script>
 
 </body>
 </html>
