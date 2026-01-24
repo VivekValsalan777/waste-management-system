@@ -1,62 +1,64 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Admin Dashboard</title>
-</head>
+<html>
+<head><title>Admin Dashboard</title></head>
 <body>
 
 <h2>Admin Dashboard</h2>
+<button onclick="load()">Load Reports</button>
 
-<button onclick="loadReports()">Load Reports</button>
-
-<table border="1" cellpadding="8" cellspacing="0">
+<table border="1" cellpadding="6">
   <thead>
     <tr>
-      <th>Report ID</th>
+      <th>Image</th>
+      <th>ID</th>
       <th>Status</th>
-      <th>Latitude</th>
-      <th>Longitude</th>
-      <th>Created At</th>
+      <th>Update</th>
+      <th>Location</th>
+      <th>Date</th>
     </tr>
   </thead>
-  <tbody id="reportTable"></tbody>
+  <tbody id="table"></tbody>
 </table>
 
-<br>
-<a href="admin.html">Back</a>
-
 <script>
-function loadReports() {
+function load() {
   fetch("/admin/reports")
-    .then(res => res.json())
+    .then(r => r.json())
     .then(data => {
-      const table = document.getElementById("reportTable");
       table.innerHTML = "";
-
-      if (data.length === 0) {
-        table.innerHTML =
-          "<tr><td colspan='5'>No reports found</td></tr>";
-        return;
-      }
-
-      data.forEach(report => {
-        const row = document.createElement("tr");
-
-        row.innerHTML = `
-          <td>${report.reportId}</td>
-          <td>${report.status}</td>
-          <td>${report.location.latitude}</td>
-          <td>${report.location.longitude}</td>
-          <td>${new Date(report.createdAt).toLocaleString()}</td>
-        `;
-
-        table.appendChild(row);
+      data.forEach(r => {
+        const map =
+          `https://www.google.com/maps?q=${r.location.latitude},${r.location.longitude}`;
+        table.innerHTML += `
+          <tr>
+            <td><img src="/uploads/${r.image}" width="100"></td>
+            <td>${r.reportId}</td>
+            <td>${r.status}</td>
+            <td>
+              <select id="s-${r.reportId}">
+                <option ${r.status=="Pending"?"selected":""}>Pending</option>
+                <option ${r.status=="In Progress"?"selected":""}>In Progress</option>
+                <option ${r.status=="Completed"?"selected":""}>Completed</option>
+              </select>
+              <button onclick="update('${r.reportId}')">Save</button>
+            </td>
+            <td><a href="${map}" target="_blank">View Map</a></td>
+            <td>${new Date(r.createdAt).toLocaleString()}</td>
+          </tr>`;
       });
-    })
-    .catch(err => {
-      alert("Failed to load reports");
-      console.error(err);
+    });
+}
+
+function update(id) {
+  const status = document.getElementById("s-" + id).value;
+  fetch("/admin/update-status", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reportId: id, status })
+  })
+    .then(() => {
+      alert("Status updated");
+      load();
     });
 }
 </script>
