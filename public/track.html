@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Track Report</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -12,17 +13,51 @@
 
 <div class="container">
   <div class="card">
+    <h2>Report Status</h2>
+
     <input id="tid" placeholder="Enter Report ID">
     <button class="primary" onclick="track()">Track</button>
-    <pre id="out"></pre>
+
+    <div id="result" style="margin-top:20px;"></div>
   </div>
 </div>
 
 <script>
+/* AUTO-FILL REPORT ID FROM URL */
+const params = new URLSearchParams(window.location.search);
+if (params.get("rid")) {
+  tid.value = params.get("rid");
+  track();
+}
+
 async function track() {
+  const result = document.getElementById("result");
+  result.innerHTML = "Loading...";
+
   const res = await fetch("/track/" + tid.value);
-  out.textContent = res.ok ? JSON.stringify(await res.json(), null, 2)
-                           : "Report not found";
+
+  if (!res.ok) {
+    result.innerHTML = "<p>Report not found</p>";
+    return;
+  }
+
+  const r = await res.json();
+
+  result.innerHTML = `
+    <p><strong>Report ID:</strong> ${r.reportId}</p>
+    <p><strong>Status:</strong> ${r.status}</p>
+    <p><strong>Date:</strong> ${new Date(r.createdAt).toLocaleString()}</p>
+
+    <p>
+      <strong>Location:</strong>
+      <a href="https://www.google.com/maps?q=${r.location.latitude},${r.location.longitude}"
+         target="_blank">View on Map</a>
+    </p>
+
+    <p><strong>Uploaded Photo:</strong></p>
+    <img src="/uploads/${r.image}"
+         style="max-width:100%; border-radius:8px; margin-top:10px;">
+  `;
 }
 </script>
 
